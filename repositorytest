@@ -1,0 +1,49 @@
+# -*- coding: utf-8 -*-
+
+import repository
+import sqlite3
+import unittest
+
+db_path = 'zamowienia.db'
+
+class RepositoryTest(unittest.TestCase):
+
+    def setUp(self):
+        conn = sqlite3.connect(db_path)
+        c = conn.cursor()
+        c.execute('DELETE FROM Produkty')
+        c.execute('DELETE FROM Zamowienia')
+        c.execute('''INSERT INTO Zamowienia (id, zam_date, ilosc) VALUES(1, '2016-01-01', 30)''')
+        c.execute('''INSERT INTO Produkty (nazwa, ilosc, cena, zamowienia_id) VALUES('mleko',5,4,1)''')
+        c.execute('''INSERT INTO Produkty (nazwa, ilosc, cena, zamowienia_id) VALUES('maslo',5,2,1)''')
+        conn.commit()
+        conn.close()
+
+    def tearDown(self):
+        conn = sqlite3.connect(db_path)
+        c = conn.cursor()
+        c.execute('DELETE FROM Produkty')
+        c.execute('DELETE FROM Zamowienia')
+        conn.commit()
+        conn.close()
+
+    def testGetByIdInstance(self):
+        zamowienia = repository.ZamowieniaRepository().getById(1)
+        self.assertIsInstance(zamowienia, repository.Zamowienia, "Objekt nie jest klasy Invoice")
+
+    def testGetByIdNotFound(self):
+        self.assertEqual(repository.ZamowieniaRepository().getById(22),
+                None, "Powinno wyjść None")
+
+    def testGetByIdInvitemsLen(self):
+        self.assertEqual(len(repository.ZamowieniaRepository().getById(1).produkty),
+                2, "Powinno wyjść 2")
+
+    def testDeleteNotFound(self):
+        self.assertRaises(repository.RepositoryException,
+                repository.ZamowieniaRepository().delete, 22)
+
+
+
+if __name__ == "__main__":
+    unittest.main()
